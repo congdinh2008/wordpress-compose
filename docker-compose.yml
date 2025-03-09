@@ -1,11 +1,10 @@
-version: "3.8"
 services:
   database:
     # We use a mariadb image which supports both amd64 & arm64 architecture
-    image: mariadb:11.1.2-jammy
+    image: mariadb:latest
     restart: unless-stopped
     ports:
-      - 3306:3306
+      - '${DB_PORT}:3306'
     env_file: .env
     environment:
       MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
@@ -19,7 +18,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2048m
+          memory: '${DB_MEMORY_LIMIT}'
 
   phpmyadmin:
     depends_on:
@@ -27,23 +26,23 @@ services:
     image: phpmyadmin/phpmyadmin
     restart: unless-stopped
     ports:
-      - 8081:80
+      - '${PHPMYADMIN_PORT}:80'
     env_file: .env
     environment:
       PMA_HOST: database
       MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
-      UPLOAD_LIMIT: 750M
-      MAX_EXECUTION_TIME: 5000
+      UPLOAD_LIMIT: '${PMA_UPLOAD_LIMIT}'
+      MAX_EXECUTION_TIME: '${PMA_MAX_EXECUTION_TIME}'
     networks:
       - wordpress-network
 
   wordpress:
     depends_on:
       - database
-    image: wordpress:php7.4-apache
+    image: wordpress:latest
     restart: unless-stopped
     ports:
-      - 8080:80
+      - '${WORDPRESS_PORT}:80'
     env_file: .env
     environment:
       WORDPRESS_DB_HOST: database:3306 # use the same name as database service
@@ -62,4 +61,4 @@ volumes:
 
 networks:
   wordpress-network:
-    driver: bridge 
+    driver: bridge
